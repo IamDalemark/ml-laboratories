@@ -1,0 +1,8 @@
+Using the dataset below, submit an ipynb file that does/includes the following:
+1. An exploratory data analysis of the dataset (data inspection, data cleaning, feature engineering, visualization, analysis that utilizes aggregation)
+2. About the visualization, you can use any that you feel is appropriate with the data.
+3. Insights in text cells that accompanies your code cells. Insights are especially needed along with any visualization + results.
+4. Preprocessing
+5. Training on at least three ML algos.
+6. Don't forget to compare the results you got between the ML algos. For simplicity, you can use accuracy to compare them, but keep in mind that in the real world, accuracy is just one of the many metric you can use.
+
