@@ -1,0 +1,22 @@
+version,run_ts_utc,submission_model,local_rmsle_best_model,best_model_name,kaggle_public_score,kaggle_private_score,notes,variant_id,validation_primary_rmsle,validation_primary_mae,validation_secondary_rmsle,stack_used,feature_profile
+v1.2,2026-02-26T03:29:00+00:00,Top-Model Blend,0.2866,XGBoost Tuned,0.3381,,Historical — logged manually. Best Kaggle public score so far.,,,,,,
+v1.3,2026-02-27T00:00:00+00:00,XGB+LGB Ensemble,0.2766,XGBoost,0.3429,,Historical — logged manually. contractor_te overfitted; gap widened.,,,,,,
+v1.4,2026-02-27T00:00:00+00:00,Ensemble,0.2783,XGBoost,0.35,,Historical — logged manually. Recency reconstruction; removed contractor_te but still regressed.,,,,,,
+v1.4,2026-02-27T02:19:42.278123+00:00,XGBoost,0.2783,XGBoost,0.35,,,,,,,,
+v1.4,2026-02-27T07:24:54.563812+00:00,XGBoost,0.2783,XGBoost,,,,,,,,,
+v1.4,2026-02-27T08:32:52.077313+00:00,XGBoost,0.2761,XGBoost,,,,,,,,,
+v1.4,2026-02-27T09:29:07.567166+00:00,XGBoost,0.278,XGBoost,,,,,,,,,
+v1.5,2026-02-27T11:41:55.226837+00:00,Ensemble,0.2835,Ensemble,,,v1.5: residual modeling + 2022+ filter + 5-fold OOF + exp-weighted recon,,,,,,
+v1.5b,2026-02-27T11:55:48.187970+00:00,Ensemble,0.2897,Ensemble,,,"v1.5b: fixed EW fallback, dropped duplicate features, tighter regularization",,,,,,
+v1.5c,2026-02-27T11:56:05.012942+00:00,Ensemble,0.3015,Ensemble,,,v1.5c: collinearity pruning — dropped 5 features with r>0.90,,,,,,
+v1.5,2026-02-27T12:07:51.575484+00:00,Ensemble,0.2835,Ensemble,,,v1.5: residual modeling + 2022+ filter + 5-fold OOF + exp-weighted recon,,,,,,
+v1.5d,2026-02-27T12:20:05.875267+00:00,Ensemble,0.2842,Ensemble,0.3484,,v1.5d: reverted harmful changes; kept only EW fix + num_pay_items_stated drop,,,,,,
+v1.6,2026-02-27T12:40:41.275750+00:00,CatBoost,0.2778,CatBoost,0.3346,,v1.6: behavioral features + CatBoost + stacking,,,,,,
+v1.7,2026-02-28T03:15:30.123739+00:00,CatBoost,0.2482,CatBoost,0.3614,,v1.7: removed leaky behavior features + residual-aligned pruning + best-model submission fix,,,,,,
+v1.8,2026-02-28T03:46:47.013049+00:00,XGBoost,0.2853820297435883,XGBoost,0.3568,,v1.8 candidate A: v1.6+fix,A,0.2590056964674694,1188613.524010687,0.2853820297435883,no,anchor_v16_behavior_all_te
+v1.8,2026-02-28T03:46:47.013049+00:00,XGBoost,0.2850983439911133,XGBoost,0.3582,,v1.8 candidate B: v1.6+behavior_recency_smooth,B,0.2605320080242479,1198603.8903219602,0.2850983439911133,no,weighted_behavior_all_te
+v1.8,2026-02-28T03:46:47.013049+00:00,XGBoost,0.285056603713597,XGBoost,0.3558,,v1.8 candidate C: v1.6+behavior_smooth+te_2022plus,C,0.2635226137728684,1195560.21000388,0.285056603713597,no,weighted_behavior_te_2022
+v1.6,2026-02-28T04:57:22.944151+00:00,CatBoost,0.2778,CatBoost,,,v1.6: behavioral features + CatBoost + stacking,,,,,,
+v1.7,2026-02-28T05:20:12.586821+00:00,CatBoost,0.2471,CatBoost,,,v1.7: removed leaky behavior features + residual-aligned pruning + best-model submission fix,,,,,,
+v1.6,2026-02-28T05:24:38.164151+00:00,Stacked,0.2784,Stacked,,,v1.6: behavioral features + CatBoost + stacking,,,,,,
+v1.9,2026-02-28T05:35:46.340946+00:00,RobustBlend,0.2544,RobustBlend,0.3433,,v1.9: blended baseline + recency-weighted training + robust ratio clipping + dual-score selection | temporal=0.2345 combined=0.2474,,,,,,
