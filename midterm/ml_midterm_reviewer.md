@@ -1,4 +1,5 @@
 # 🎯 MACHINE LEARNING MIDTERM EXAM REVIEWER
+
 ### Based on: Prof's Notebooks (Regression_Demo + Tuning) + Lab 4 (Kaggle Competition)
 
 ---
@@ -12,6 +13,7 @@
 5. Model Comparison & Evaluation using **Regression metrics**
 
 > ⚠️ KEY DIFFERENCES FROM PRELIM:
+>
 > - Prelim = **Classification** → predict a label → metrics: Accuracy, F1, Confusion Matrix
 > - Midterm = **Regression** → predict a **number** → metrics: RMSE, MAE, R², RMSLE
 > - Midterm adds: **Cross-Validation**, **Hyperparameter Tuning**, **Ensemble methods**
@@ -78,6 +80,7 @@ df.isnull().sum()
 ```
 
 **Write an insight like:**
+
 > "The dataset has X rows and Y columns. The target variable is [column name] which is a **continuous numeric variable**, making this a **regression** problem."
 
 ---
@@ -113,18 +116,21 @@ df['text_col'] = df['text_col'].str.strip().str.lower()
 ### 🔑 Regression-Specific Cleaning Tips (from Lab 4)
 
 **Remove zero or negative values if target is a price/count:**
+
 ```python
 df = df[df['target_col'] > 0].copy()      # prices can't be 0 or negative
 df['quantity'] = df['quantity'].clip(lower=0)   # quantities: clip, don't remove
 ```
 
 **Safe bulk null-fill using column medians (very useful in exams):**
+
 ```python
 for col in df.select_dtypes(include=np.number).columns:
     df[col] = df[col].fillna(df[col].median())
 ```
 
 **After train/test split, fill test nulls with TRAIN medians to avoid leakage:**
+
 ```python
 for col in X_train.columns:
     med = X_train[col].median()           # always from TRAIN only
@@ -153,6 +159,7 @@ df = df[(df['col'] >= lower) & (df['col'] <= upper)]
 ```
 
 **Boxplot to visualize outliers:**
+
 ```python
 numerical_cols = df.select_dtypes(include=np.number).columns
 fig, axes = plt.subplots(1, len(numerical_cols), figsize=(16, 5))
@@ -189,6 +196,7 @@ df.drop(['id', 'name'], axis=1, inplace=True)
 ### 🔑 Regression-Specific Feature Engineering (from Lab 4)
 
 **Log-transform highly skewed numeric features** (not just the target!):
+
 ```python
 # Check skewness first
 for col in df.select_dtypes(include=np.number).columns:
@@ -199,6 +207,7 @@ for col in df.select_dtypes(include=np.number).columns:
 ```
 
 **Winsorization — clip extreme outliers instead of removing rows:**
+
 ```python
 # Instead of deleting outliers, cap them at a reasonable range
 # Very useful when you can't afford to lose rows
@@ -207,12 +216,14 @@ df['col_clip'] = df['col'].clip(lower=df['col'].quantile(0.01),
 ```
 
 **Ratio features to capture relative comparisons:**
+
 ```python
 df['ratio_a_to_b']   = df['col_a'] / df['col_b'].clip(lower=1)   # avoid division by zero
 df['delta_a_minus_b'] = df['col_a'] - df['col_b']
 ```
 
 **Cyclical encoding for time features** (better than raw month/hour numbers):
+
 ```python
 # A model doesn't know that month 12 and month 1 are neighbors — cyclical fixes that
 df['month_sin'] = np.sin(2 * np.pi * df['month'] / 12)
@@ -222,6 +233,7 @@ df['dow_cos']   = np.cos(2 * np.pi * df['day_of_week'] / 7)
 ```
 
 **GroupBy-based features — relative position within a group:**
+
 ```python
 # How does this row compare to others in the same group?
 group_col = 'category'
@@ -233,6 +245,7 @@ df['rank_in_group']   = df.groupby(group_col)['value'].rank(method='average', pc
 ```
 
 **Target Encoding — replace a categorical with the mean of the target per category:**
+
 ```python
 # SIMPLE version (use when you don't need to worry about leakage)
 mean_per_cat = df.groupby('category_col')['target'].mean()
@@ -245,6 +258,7 @@ stats = df.groupby('category_col')['target'].agg(['sum', 'count'])
 stats['smoothed'] = (stats['sum'] + global_mean * alpha) / (stats['count'] + alpha)
 df['cat_encoded'] = df['category_col'].map(stats['smoothed']).fillna(global_mean)
 ```
+
 > ⚠️ WARNING: For proper target encoding, use K-fold to avoid leakage (see Phase 6)
 
 ---
@@ -252,6 +266,7 @@ df['cat_encoded'] = df['category_col'].map(stats['smoothed']).fillna(global_mean
 ## 1.5 VISUALIZATION
 
 ### Check Skewness (important for regression!)
+
 ```python
 numerical_cols = df.select_dtypes(include=np.number).columns.tolist()
 
@@ -263,6 +278,7 @@ for col in numerical_cols:
 ```
 
 ### Distribution Plots
+
 ```python
 # Histogram for target variable (ALWAYS plot this first)
 plt.figure(figsize=(8, 5))
@@ -274,6 +290,7 @@ plt.show()
 ```
 
 ### Correlation Heatmap
+
 ```python
 corr = df.select_dtypes(include=np.number).corr()
 plt.figure(figsize=(12, 8))
@@ -284,6 +301,7 @@ plt.show()
 ```
 
 ### Scatter Plot (feature vs target)
+
 ```python
 plt.scatter(df['feature'], df['target'])
 plt.xlabel('Feature')
@@ -296,6 +314,7 @@ sns.scatterplot(x='feature', y='target', data=df)
 ```
 
 ### GroupBy Aggregation (for analysis insight)
+
 ```python
 # Example: average target per category
 agg = df.groupby('category_col').agg({'target': ['mean', 'median', 'count']})
@@ -369,23 +388,23 @@ X_test_scaled  = scaler.transform(X_test)
 
 **When to use which scaler:**
 
-| Scaler | How it works | Use when |
-|--------|-------------|----------|
-| `StandardScaler` | Subtract mean, divide by std | Data is roughly normal, few outliers |
-| `RobustScaler` | Subtract median, divide by IQR | Data has significant outliers (prices, incomes) |
-| `MinMaxScaler` | Scale to 0–1 range | You need a bounded range (e.g. neural nets) |
+| Scaler           | How it works                   | Use when                                        |
+| ---------------- | ------------------------------ | ----------------------------------------------- |
+| `StandardScaler` | Subtract mean, divide by std   | Data is roughly normal, few outliers            |
+| `RobustScaler`   | Subtract median, divide by IQR | Data has significant outliers (prices, incomes) |
+| `MinMaxScaler`   | Scale to 0–1 range             | You need a bounded range (e.g. neural nets)     |
 
 **Which models NEED scaling?**
 
-| Model | Needs Scaling? |
-|---|---|
-| Linear Regression | ✅ Yes |
-| Ridge / Lasso | ✅ Yes |
-| KNN Regressor | ✅ Yes (distance-based!) |
-| SVR | ✅ Yes |
-| Decision Tree | ❌ No |
-| Random Forest | ❌ No |
-| Gradient Boosting / XGBoost / LightGBM | ❌ No |
+| Model                                  | Needs Scaling?           |
+| -------------------------------------- | ------------------------ |
+| Linear Regression                      | ✅ Yes                   |
+| Ridge / Lasso                          | ✅ Yes                   |
+| KNN Regressor                          | ✅ Yes (distance-based!) |
+| SVR                                    | ✅ Yes                   |
+| Decision Tree                          | ❌ No                    |
+| Random Forest                          | ❌ No                    |
+| Gradient Boosting / XGBoost / LightGBM | ❌ No                    |
 
 > 💡 TIP from prof's notebook: For consistency, you can scale everything and use scaled data for all models. Trees won't be hurt by it.
 
@@ -396,6 +415,7 @@ X_test_scaled  = scaler.transform(X_test)
 > From the professor's notebook — these are the exact models he used!
 
 ## 3.1 LINEAR REGRESSION
+
 ```python
 from sklearn.linear_model import LinearRegression
 
@@ -406,11 +426,13 @@ y_pred_lr = lr.predict(X_test_scaled)
 print("Linear Regression RMSE:", np.sqrt(mean_squared_error(y_test, y_pred_lr)))
 print("Linear Regression R²:  ", r2_score(y_test, y_pred_lr))
 ```
+
 **When to use:** Baseline model. Good when relationships are roughly linear.
 
 ---
 
 ## 3.2 RIDGE REGRESSION
+
 ```python
 from sklearn.linear_model import Ridge
 
@@ -421,13 +443,15 @@ y_pred_ridge = ridge.predict(X_test_scaled)
 print("Ridge RMSE:", np.sqrt(mean_squared_error(y_test, y_pred_ridge)))
 print("Ridge R²:  ", r2_score(y_test, y_pred_ridge))
 ```
+
 **What is Ridge?** Linear Regression + penalty on large coefficients (L2 regularization).
 **When to use:** When features are correlated (multicollinearity) or when Linear Regression overfits.
 **alpha:** Higher = stronger penalty = simpler model. Lower = closer to plain Linear Regression.
 
 ---
 
-## 3.3 LASSO REGRESSION *(bonus — good to know)*
+## 3.3 LASSO REGRESSION _(bonus — good to know)_
+
 ```python
 from sklearn.linear_model import Lasso
 
@@ -435,11 +459,13 @@ lasso = Lasso(alpha=0.1)
 lasso.fit(X_train_scaled, y_train)
 y_pred_lasso = lasso.predict(X_test_scaled)
 ```
+
 **Difference from Ridge:** Lasso can set some coefficients to exactly 0 → automatic feature selection.
 
 ---
 
 ## 3.4 KNN REGRESSOR
+
 ```python
 from sklearn.neighbors import KNeighborsRegressor
 
@@ -450,6 +476,7 @@ y_pred_knn = knn.predict(X_test_scaled)
 print("KNN RMSE:", np.sqrt(mean_squared_error(y_test, y_pred_knn)))
 print("KNN R²:  ", r2_score(y_test, y_pred_knn))
 ```
+
 **How it works:** Predicts by averaging the target values of the K nearest training points.
 **Must scale:** Yes — KNN is distance-based, unscaled features will dominate.
 **n_neighbors:** Try 5, 7, 10. Smaller = more complex model, larger = smoother.
@@ -457,6 +484,7 @@ print("KNN R²:  ", r2_score(y_test, y_pred_knn))
 ---
 
 ## 3.5 DECISION TREE REGRESSOR
+
 ```python
 from sklearn.tree import DecisionTreeRegressor
 
@@ -467,12 +495,14 @@ y_pred_dt = dt.predict(X_test)
 print("Decision Tree RMSE:", np.sqrt(mean_squared_error(y_test, y_pred_dt)))
 print("Decision Tree R²:  ", r2_score(y_test, y_pred_dt))
 ```
+
 **max_depth:** Limits tree depth → prevents overfitting. Without it, tree will overfit.
 **No scaling needed:** Trees split on thresholds, not distances.
 
 ---
 
 ## 3.6 SVR (Support Vector Regressor)
+
 ```python
 from sklearn.svm import SVR
 
@@ -482,20 +512,25 @@ y_pred_svr = svr.predict(X_test_scaled)
 
 print("SVR RMSE:", np.sqrt(mean_squared_error(y_test, y_pred_svr)))
 ```
+
 **Warning from prof:** SVR is very slow on large datasets. Use a subset if needed:
+
 ```python
 X_train_sub = X_train_scaled[:2000]   # use first 2000 rows
 y_train_sub = y_train[:2000]
 svr.fit(X_train_sub, y_train_sub)
 ```
+
 **Parameters:**
+
 - `kernel='rbf'` — standard choice for non-linear data
 - `C` — regularization (higher C = fits training data more tightly)
 - `epsilon` — tolerance margin (predictions within epsilon are not penalized)
 
 ---
 
-## 3.7 RANDOM FOREST REGRESSOR *(great all-around model)*
+## 3.7 RANDOM FOREST REGRESSOR _(great all-around model)_
+
 ```python
 from sklearn.ensemble import RandomForestRegressor
 
@@ -516,44 +551,53 @@ print("Random Forest R²:  ", r2_score(y_test, y_pred_rf))
 ## 4.1 THE FOUR KEY METRICS
 
 ### MAE — Mean Absolute Error
+
 ```python
 mae = mean_absolute_error(y_test, y_pred)
 print(f"MAE: {mae:.4f}")
 ```
+
 - Average of |actual − predicted|
 - **Easy to interpret** — same unit as your target
 - Less sensitive to outliers
 - "On average, my predictions are off by MAE units"
 
 ### MSE — Mean Squared Error
+
 ```python
 mse = mean_squared_error(y_test, y_pred)
 print(f"MSE: {mse:.4f}")
 ```
+
 - Average of (actual − predicted)²
 - **Penalizes large errors heavily**
 - Harder to interpret (units are squared)
 
 ### RMSE — Root Mean Squared Error ← Prof uses this most!
+
 ```python
 rmse = np.sqrt(mean_squared_error(y_test, y_pred))
 print(f"RMSE: {rmse:.4f}")
 ```
+
 - Square root of MSE → same units as target
 - **Most commonly used regression metric**
 - Lower is better
 - Still penalizes large errors more than MAE
 
 ### R² Score — Coefficient of Determination
+
 ```python
 r2 = r2_score(y_test, y_pred)
 print(f"R²: {r2:.4f}")
 ```
+
 - How much variance in the target the model explains
 - **1.0 = perfect**, **0.0 = model is useless**, **negative = worse than just predicting the mean**
 - Higher is better
 
 ### 🔑 RMSLE — Root Mean Squared LOG Error (from Lab 4!)
+
 ```python
 # Use when your target spans many orders of magnitude (prices, counts, etc.)
 # Kaggle competitions with price targets often use this metric
@@ -565,13 +609,16 @@ def rmsle(y_true, y_pred):
 
 print(f"RMSLE: {rmsle(y_test, y_pred):.4f}")
 ```
+
 **Why RMSLE instead of RMSE?**
+
 - A $1,000 error on a $10,000 job (10% off) should be penalized the same as a $100,000 error on a $1,000,000 job (also 10% off)
 - RMSE would heavily penalize the large job even though the relative error is the same
 - RMSLE treats **relative/percentage errors** symmetrically → perfect for prices and counts
 - **Lower is better. Typical good RMSLE for price data: < 0.3**
 
 **When to use log1p on the target itself:**
+
 ```python
 # If your target is heavily right-skewed (prices, salaries, counts)
 # Transform BEFORE training, then reverse AFTER predicting
@@ -588,12 +635,12 @@ rmse = np.sqrt(mean_squared_error(y_test, y_pred_orig))
 
 ## 4.2 METRIC SUMMARY TABLE
 
-| Metric | Good Value | Unit | Use When |
-|--------|------------|------|----------|
-| MAE | As low as possible | Same as target | Robust to outliers needed |
-| RMSE | As low as possible | Same as target | Standard regression |
-| R² | Close to 1.0 | Unitless (0–1) | Explaining variance |
-| RMSLE | As low as possible | Unitless | Skewed targets, prices, counts |
+| Metric | Good Value         | Unit           | Use When                       |
+| ------ | ------------------ | -------------- | ------------------------------ |
+| MAE    | As low as possible | Same as target | Robust to outliers needed      |
+| RMSE   | As low as possible | Same as target | Standard regression            |
+| R²     | Close to 1.0       | Unitless (0–1) | Explaining variance            |
+| RMSLE  | As low as possible | Unitless       | Skewed targets, prices, counts |
 
 > **In the exam:** Always print ALL THREE standard metrics (RMSE, MAE, R²). If target is skewed (prices, counts), add RMSLE. Then in your insight, say which model has lowest RMSE and highest R².
 
@@ -626,6 +673,7 @@ print(results_df.to_string(index=False))
 ```
 
 ### Visualize Comparison
+
 ```python
 # RMSE bar chart (lower = better)
 plt.figure(figsize=(10, 5))
@@ -645,6 +693,7 @@ plt.show()
 ```
 
 ### Predicted vs Actual Plot
+
 ```python
 # Great visualization for regression — shows how well predictions match reality
 plt.figure(figsize=(8, 6))
@@ -657,6 +706,7 @@ plt.title('Actual vs Predicted — Linear Regression')
 plt.tight_layout()
 plt.show()
 ```
+
 > 💡 Points closer to the red dashed line = better predictions
 
 ---
@@ -666,11 +716,13 @@ plt.show()
 > This is the completely new topic for midterm. From the Tuning notebook.
 
 ## What are Hyperparameters?
+
 - Settings you configure **before** training (not learned from data)
 - Examples: `max_depth`, `n_estimators`, `alpha`, `n_neighbors`, `C`
 - Tuning = finding the best combo of these settings
 
 ## 6.1 CROSS-VALIDATION (Understand This First!)
+
 ```python
 from sklearn.model_selection import cross_val_score
 
@@ -688,11 +740,13 @@ print(f"Std CV RMSE:    {rmse_scores.std():.4f}")
 ```
 
 **Why use cross-validation?**
+
 - Prevents overfitting to a specific train-test split
 - Gives more reliable estimate of true model performance
 - The `± std` tells you how stable/consistent the model is
 
 **For classification (like in the prof's notebook):**
+
 ```python
 cv_scores = cross_val_score(model, X_train, y_train, cv=5, scoring='f1')
 print(f"Average CV F1: {cv_scores.mean():.4f} (+/- {cv_scores.std() * 2:.4f})")
@@ -807,6 +861,7 @@ print(comparison.to_string(index=False))
 ## 6.5 GRIDSEARCHCV FOR OTHER MODELS
 
 ### Ridge / Lasso Tuning
+
 ```python
 param_grid = {'alpha': [0.01, 0.1, 1.0, 10.0, 100.0]}
 grid = GridSearchCV(Ridge(), param_grid, cv=5, scoring='neg_mean_squared_error')
@@ -815,6 +870,7 @@ print("Best alpha:", grid.best_params_)
 ```
 
 ### KNN Tuning
+
 ```python
 param_grid = {'n_neighbors': [3, 5, 7, 10, 15, 20]}
 grid = GridSearchCV(KNeighborsRegressor(), param_grid, cv=5,
@@ -824,6 +880,7 @@ print("Best k:", grid.best_params_)
 ```
 
 ### Decision Tree Tuning
+
 ```python
 param_grid = {
     'max_depth':        [3, 5, 10, None],
@@ -940,6 +997,7 @@ print("Tuned R²:  ", r2_score(y_test, y_pred_tuned))
 ## 7.1 WHAT IS GRADIENT BOOSTING?
 
 All three models below (XGBoost, LightGBM, CatBoost) are **Gradient Boosting** algorithms:
+
 - Build trees **sequentially** — each tree corrects the errors of the previous one
 - Very powerful out of the box; even better after tuning
 - **Don't need scaling** (tree-based)
@@ -948,6 +1006,7 @@ All three models below (XGBoost, LightGBM, CatBoost) are **Gradient Boosting** a
 **Analogy:** Like a team where each new member specifically targets the mistakes the previous members made.
 
 **vs Random Forest:**
+
 - Random Forest: trees are built **in parallel** (independently), averaged
 - Gradient Boosting: trees are built **sequentially**, each improving on the last
 - Gradient Boosting is usually more accurate but slower to train
@@ -1031,6 +1090,7 @@ y_pred = lgb_model.predict(X_test)
 ```
 
 **LightGBM vs XGBoost:**
+
 - LightGBM grows trees **leaf-wise** (deeper, more asymmetric)
 - XGBoost grows trees **level-wise** (balanced)
 - LightGBM is usually **faster** and handles large datasets better
@@ -1162,7 +1222,7 @@ for tr_i, va_i in gkf.split(X, y, groups=groups):
 
 ## 9.1 OPTUNA — Bayesian Optimization
 
-> GridSearch and RandomSearch try hyperparameters blindly. Optuna *learns* from previous trials and focuses on promising regions. Much more efficient for large parameter spaces.
+> GridSearch and RandomSearch try hyperparameters blindly. Optuna _learns_ from previous trials and focuses on promising regions. Much more efficient for large parameter spaces.
 
 ```python
 # pip install optuna
@@ -1202,13 +1262,14 @@ best_model.fit(X_train, y_train)
 
 **Optuna vs GridSearch vs RandomSearch:**
 
-| Method | How it searches | Speed | Best for |
-|---|---|---|---|
-| `GridSearchCV` | All combinations | Slowest | Small param grids (< 100 combos) |
-| `RandomizedSearchCV` | Random samples | Fast | Medium param spaces |
-| `Optuna` | Bayesian (learns from past) | Fastest | Large param spaces (7+ params) |
+| Method               | How it searches             | Speed   | Best for                         |
+| -------------------- | --------------------------- | ------- | -------------------------------- |
+| `GridSearchCV`       | All combinations            | Slowest | Small param grids (< 100 combos) |
+| `RandomizedSearchCV` | Random samples              | Fast    | Medium param spaces              |
+| `Optuna`             | Bayesian (learns from past) | Fastest | Large param spaces (7+ params)   |
 
 **Suggest functions:**
+
 ```python
 trial.suggest_int('param', low, high)              # integer
 trial.suggest_float('param', low, high)            # float
@@ -1266,10 +1327,10 @@ model.fit(X_train, y_train, sample_weight=sample_weights)
 
 ---
 
-
-
 ## What is Regularization? (Ridge / Lasso)
+
 Regular Linear Regression just minimizes error. Ridge/Lasso also penalize complexity:
+
 - **Without regularization:** Model might memorize training data (overfit) → bad on test data
 - **With regularization (alpha > 0):** Model is forced to keep coefficients small → generalizes better
 - `alpha` knob: higher = more penalty = simpler model
@@ -1277,36 +1338,42 @@ Regular Linear Regression just minimizes error. Ridge/Lasso also penalize comple
 - **Lasso (L1):** Can set some coefficients to exactly zero → automatic feature selection
 
 ## What is Overfitting vs Underfitting?
+
 - **Overfitting:** Great on train, bad on test → train RMSE low, test RMSE high
   - Fix: regularization, limit `max_depth`, cross-validation, reduce features
 - **Underfitting:** Bad on both → high RMSE everywhere
   - Fix: more complex model, more features, less regularization
 
 ## What is Cross-Validation (CV)?
+
 - CV splits training data into `k` folds, trains and tests `k` times → average score
 - More reliable than single train/test split
 - `cv=5` = 5-fold (most common). Lower std across folds = more stable model.
 
 ## Why Log-Transform a Skewed Target?
+
 - Prices, salaries, counts are right-skewed → a few huge values pull the distribution
 - Linear models assume normally distributed errors — skewed target violates this
 - Log-transform makes distribution more Gaussian → better model fit
 - Always use `np.log1p()` (safe for zeros), reverse with `np.expm1()` after predicting
 
 ## GridSearch vs RandomSearch vs Optuna?
-| | GridSearchCV | RandomizedSearchCV | Optuna |
-|---|---|---|---|
-| Tries | ALL combinations | Random `n_iter` combos | Smart Bayesian combos |
-| Speed | Slowest | Fast | Fastest for large spaces |
-| Best for | Small grids | Medium spaces | 5+ parameters |
+
+|          | GridSearchCV     | RandomizedSearchCV     | Optuna                   |
+| -------- | ---------------- | ---------------------- | ------------------------ |
+| Tries    | ALL combinations | Random `n_iter` combos | Smart Bayesian combos    |
+| Speed    | Slowest          | Fast                   | Fastest for large spaces |
+| Best for | Small grids      | Medium spaces          | 5+ parameters            |
 
 ## What is Stacking / Ensembling?
+
 - **Blending:** Weighted average of predictions from different models
 - **Stacking:** Use model predictions as inputs to a "meta-model" (usually Ridge)
 - Works because different models make different mistakes → averaging cancels errors
 - **OOF (out-of-fold) predictions** must be used to train meta-model to avoid leakage
 
 ## What is Target Encoding?
+
 - Replace a categorical column with the average target value per category
 - More informative than one-hot encoding for high-cardinality categoricals
 - Risk: **leakage** if you use target from the same rows → always use smoothing or K-fold TE
@@ -1316,36 +1383,47 @@ Regular Linear Regression just minimizes error. Ridge/Lasso also penalize comple
 # ⚡ INSIGHTS TO WRITE (Copy & Adapt)
 
 ### After Data Inspection:
+
 > "The dataset contains X rows and Y columns. The target variable is [name], which is a continuous numeric variable indicating [what it means]. This is a **regression problem**. Features include a mix of numeric and categorical variables."
 
 ### After Cleaning:
+
 > "X duplicate rows were removed. Y missing values were found in column Z and were filled using the median, as the distribution appeared right-skewed. Outliers in column W were removed using the IQR method, reducing the dataset by X rows."
 
 ### After Target Distribution Plot:
+
 > "The target variable [name] is heavily right-skewed (skewness = X.XX), with values spanning a wide range from [min] to [max]. A log transformation was applied to normalize the distribution before modeling, which reduced skewness to X.XX."
 
 ### After Feature Engineering:
+
 > "A new feature [name] was created by [rationale]. This captures [insight] which may help the model better predict [target]."
 
 ### After Correlation Heatmap:
+
 > "The heatmap reveals that [feature A] has the strongest positive correlation with [target] (r = X.XX). [Feature B] and [Feature C] are highly correlated with each other (r > 0.9), suggesting possible multicollinearity. For Ridge regression, this is handled by the regularization penalty."
 
 ### After Model Training:
+
 > "Among the trained models, [Model Name] achieved the lowest RMSE of X.XX and the highest R² of X.XX, indicating it explains XX% of the variance in the target variable. Decision Tree and Linear Regression underperformed, likely due to [reason]."
 
 ### After Tuning:
+
 > "After applying GridSearchCV with parameters [list], the best configuration was [params]. The tuned model improved RMSE from X.XX to Y.YY, demonstrating the value of hyperparameter optimization."
 
 ### After Cross-Validation:
+
 > "5-fold cross-validation yielded an average RMSE of X.XX ± Y.YY, confirming that the model generalizes consistently and is not overfitting to a particular split."
 
 ### After RMSLE Metric (if target is skewed/price data):
+
 > "RMSLE was used as the primary metric because the target spans several orders of magnitude. RMSLE treats relative errors equally regardless of scale — a 10% error on a small bid is penalized the same as a 10% error on a large bid."
 
 ### After Feature Importance:
+
 > "[Feature A] and [Feature B] are the most important predictors across all three models, suggesting they capture the dominant patterns in the data. Features appearing in the top 10 of all models are the most reliable signals."
 
 ### After Ensembling:
+
 > "A blended ensemble (X% model A + Y% model B) achieved RMSE of X.XX, outperforming all individual models. This improvement demonstrates that model diversity reduces prediction variance — each model's errors partially cancel out."
 
 ---
@@ -1353,11 +1431,13 @@ Regular Linear Regression just minimizes error. Ridge/Lasso also penalize comple
 # 🗓️ EXAM DAY CHECKLIST
 
 ### STEP 1: Load & Inspect (5 min)
+
 - [ ] `df.head()`, `df.info()`, `df.describe()`, `df.shape`
 - [ ] Identify target variable (continuous = regression!)
 - [ ] Write insight: dataset overview
 
 ### STEP 2: Clean (10 min)
+
 - [ ] `df.drop_duplicates()`
 - [ ] `df.isnull().sum()` → fill or drop
 - [ ] Check and handle outliers (IQR)
@@ -1365,12 +1445,14 @@ Regular Linear Regression just minimizes error. Ridge/Lasso also penalize comple
 - [ ] Write insight: what you cleaned and why
 
 ### STEP 3: Feature Engineering (5–10 min)
+
 - [ ] Drop ID / irrelevant columns
 - [ ] Create at least 1 new meaningful feature
 - [ ] Extract from dates if applicable
 - [ ] Write insight: why these features help
 
 ### STEP 4: Visualize (10–15 min)
+
 - [ ] Target distribution histogram
 - [ ] Correlation heatmap
 - [ ] Scatter plot: key feature vs target
@@ -1378,23 +1460,27 @@ Regular Linear Regression just minimizes error. Ridge/Lasso also penalize comple
 - [ ] **Write insight for EACH visualization**
 
 ### STEP 5: Preprocess (5–10 min)
+
 - [ ] Encode categorical columns
 - [ ] `train_test_split` (no stratify for regression)
 - [ ] `StandardScaler` — fit on train, transform test
 - [ ] Write insight: preprocessing choices
 
 ### STEP 6: Train 3+ Models (10–15 min)
+
 - [ ] At minimum: Linear Regression + Ridge + KNN (or Decision Tree)
 - [ ] Print RMSE and R² for each
 - [ ] Write insight
 
 ### STEP 7: Tune (10 min)
+
 - [ ] `cross_val_score` on your best model
 - [ ] `GridSearchCV` or `RandomizedSearchCV`
 - [ ] Compare baseline vs tuned
 - [ ] Write insight: did tuning help?
 
 ### STEP 8: Compare (5 min)
+
 - [ ] `results_df` table sorted by RMSE
 - [ ] Bar chart for visual comparison
 - [ ] Final insight: which model won and why
@@ -1411,7 +1497,7 @@ Regular Linear Regression just minimizes error. Ridge/Lasso also penalize comple
 6. **GridSearch without baseline** → Always train a baseline first to show improvement.
 7. **Not printing all metrics** → Lost points! Show RMSE, MAE, R² for every model.
 8. **Forgetting insights on visualizations** → Easy points lost.
-9. **Using `GridSearchCV.best_score_` directly for regression** → It's negative (neg_MSE), convert with `np.sqrt(-grid.best_score_)`.
+9. **Using `GridSearchCV.best_score_` directly for regression** → It's negative (neg*MSE), convert with `np.sqrt(-grid.best_score*)`.
 10. **Setting `n_iter` too high in RandomizedSearch** → Slow exam; keep it at 10–20.
 11. **Log-transforming target but forgetting to reverse** → Predicting in log space, evaluating in original scale → wrong metrics. Always `np.expm1()` your predictions.
 12. **Scaling before train-test split** → Data leakage! Split first, then scale.
@@ -1445,6 +1531,7 @@ plt.show()
 **Good luck on your midterm! 🚀**
 
 Remember:
+
 - Regression = predicting NUMBERS → use RMSE, MAE, R² (+ RMSLE for skewed/price targets)
 - Always train a baseline → then tune with GridSearch or RandomSearch
 - Cross-validation gives you confidence your model isn't just lucky
@@ -1454,4 +1541,5 @@ Remember:
 - Insights at every step = easy points!
 
 ---
-*Reviewer covers: Prof's Regression Demo + Tuning Notebook + Lab 4 Kaggle Competition (v1.9)*
+
+_Reviewer covers: Prof's Regression Demo + Tuning Notebook + Lab 4 Kaggle Competition (v1.9)_
