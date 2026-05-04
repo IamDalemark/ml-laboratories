@@ -9,6 +9,7 @@ ML-laboratories/
 ├── lab1/          # Laboratory 1 exercises
 ├── lab2/          # Laboratory 2 exercises (includes mission_launches.csv dataset)
 ├── lab3/          # Laboratory 3 exercises
+├── lab4/          # Laboratory 4 exercises
 └── requirements.txt
 ```
 
